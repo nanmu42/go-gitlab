@@ -173,6 +173,35 @@ func TestCheckResponse(t *testing.T) {
 	}
 }
 
+func TestCheckResponseOn401(t *testing.T) {
+	c, err := NewClient("")
+	if err != nil {
+		t.Fatalf("Failed to create client: %v", err)
+	}
+
+	req, err := c.NewRequest(http.MethodGet, "test", nil, nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	resp := &http.Response{
+		Request:    req.Request,
+		StatusCode: http.StatusUnauthorized,
+		Body: io.NopCloser(strings.NewReader(`
+		{
+  "message": "401 Unauthorized"
+}`)),
+	}
+
+	errResp := CheckResponse(resp)
+	if errResp == nil {
+		t.Fatal("Expected error response.")
+	}
+	if !errors.Is(errResp, ErrUserIsUnauthorized) {
+		t.Fatalf("want errResp to be %s, got %s", ErrUserIsUnauthorized, errResp)
+	}
+}
+
 func TestCheckResponseOnUnknownErrorFormat(t *testing.T) {
 	c, err := NewClient("")
 	if err != nil {

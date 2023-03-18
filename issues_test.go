@@ -17,6 +17,7 @@
 package gitlab
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -192,6 +193,31 @@ func TestListIssues(t *testing.T) {
 
 	if !reflect.DeepEqual(want, issues) {
 		t.Errorf("Issues.ListIssues returned %+v, want %+v", issues, want)
+	}
+}
+
+func TestListIssues401Response(t *testing.T) {
+	mux, client := setup(t)
+
+	mux.HandleFunc("/api/v4/issues", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, http.MethodGet)
+		testURL(t, r, "/api/v4/issues?assignee_id=2&author_id=1")
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprint(w, `
+			{
+  "message": "401 Unauthorized"
+}`,
+		)
+	})
+
+	listProjectIssue := &ListIssuesOptions{
+		AuthorID:   Int(0o1),
+		AssigneeID: AssigneeID(0o2),
+	}
+
+	_, _, err := client.Issues.ListIssues(listProjectIssue)
+	if !errors.Is(err, ErrUserIsUnauthorized) {
+		t.Fatalf("want err to be %s, got %s", ErrUserIsUnauthorized, err)
 	}
 }
 

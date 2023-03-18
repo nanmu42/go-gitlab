@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -882,6 +883,11 @@ func (e *ErrorResponse) Error() string {
 	return fmt.Sprintf("%s %s: %d %s", e.Response.Request.Method, u, e.Response.StatusCode, e.Message)
 }
 
+// ErrUserIsUnauthorized is used to assert 401 response from Gitlab
+//
+// Ref: https://docs.gitlab.com/ee/api/rest/#status-codes
+var ErrUserIsUnauthorized = errors.New("user is unauthorized")
+
 // CheckResponse checks the API response for errors, and returns them if present.
 func CheckResponse(r *http.Response) error {
 	switch r.StatusCode {
@@ -900,6 +906,10 @@ func CheckResponse(r *http.Response) error {
 		} else {
 			errorResponse.Message = parseError(raw)
 		}
+	}
+
+	if r.StatusCode == 401 {
+		return fmt.Errorf("%w: %s", ErrUserIsUnauthorized, errorResponse)
 	}
 
 	return errorResponse
