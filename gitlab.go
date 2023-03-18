@@ -55,6 +55,10 @@ const (
 // GitLab API docs: https://docs.gitlab.com/ee/api/
 type AuthType int
 
+// NoAuth means no token is provided during authentication
+// so the client only has access to public resources.
+const NoAuth AuthType = -1
+
 // List of available authentication types.
 //
 // GitLab API docs: https://docs.gitlab.com/ee/api/
@@ -238,6 +242,17 @@ func NewClient(token string, options ...ClientOptionFunc) (*Client, error) {
 	}
 	client.authType = PrivateToken
 	client.token = token
+	return client, nil
+}
+
+// NewNoAuthClient returns a new GitLab API client, with no auth info provided.
+// That's to say, it can only access public resources.
+func NewNoAuthClient(options ...ClientOptionFunc) (*Client, error) {
+	client, err := newClient(options...)
+	if err != nil {
+		return nil, err
+	}
+	client.authType = NoAuth
 	return client, nil
 }
 
@@ -757,6 +772,8 @@ func (c *Client) Do(req *retryablehttp.Request, v interface{}) (*Response, error
 	// if we already have a token and if not first authenticate and get one.
 	var basicAuthToken string
 	switch c.authType {
+	case NoAuth:
+		// relax
 	case BasicAuth:
 		c.tokenLock.RLock()
 		basicAuthToken = c.token
