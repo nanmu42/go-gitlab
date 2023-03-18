@@ -926,7 +926,8 @@ func CheckResponse(r *http.Response) error {
 	}
 
 	if r.StatusCode == 401 {
-		return fmt.Errorf("%w: %s", ErrUserIsUnauthorized, errorResponse)
+		//goland:noinspection ALL
+		return fmt.Errorf("%w: %w", ErrUserIsUnauthorized, errorResponse)
 	}
 
 	return errorResponse
