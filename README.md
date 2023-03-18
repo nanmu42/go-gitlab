@@ -1,17 +1,14 @@
 # go-gitlab
 
+This is a fork of go-gitlab by Sander van Harmelen, with some patches to ease my usage.
+
+Due to bandwidth limit, I have no plan to merge the changes back into upstream.
+
 A GitLab API client enabling Go programs to interact with GitLab in a simple and uniform way
 
-[![Build Status](https://github.com/xanzy/go-gitlab/workflows/Lint%20and%20Test/badge.svg)](https://github.com/xanzy/go-gitlab/actions?workflow=Lint%20and%20Test)
-[![Sourcegraph](https://sourcegraph.com/github.com/xanzy/go-gitlab/-/badge.svg)](https://sourcegraph.com/github.com/xanzy/go-gitlab?badge)
-[![GoDoc](https://godoc.org/github.com/xanzy/go-gitlab?status.svg)](https://godoc.org/github.com/xanzy/go-gitlab)
-[![Go Report Card](https://goreportcard.com/badge/github.com/xanzy/go-gitlab)](https://goreportcard.com/report/github.com/xanzy/go-gitlab)
-
-## NOTE
-
-Release v0.6.0 (released on 25-08-2017) no longer supports the older V3 GitLab API. If
-you need V3 support, please use the `f-api-v3` branch. This release contains some backwards
-incompatible changes that were needed to fully support the V4 GitLab API.
+[![Build Status](https://github.com/nanmu42/go-gitlab/workflows/Lint%20and%20Test/badge.svg)](https://github.com/nanmu42/go-gitlab/actions?workflow=Lint%20and%20Test)
+[![GoDoc](https://godoc.org/github.com/nanmu42/go-gitlab?status.svg)](https://godoc.org/github.com/nanmu42/go-gitlab)
+[![Go Report Card](https://goreportcard.com/badge/github.com/nanmu42/go-gitlab)](https://goreportcard.com/report/github.com/nanmu42/go-gitlab)
 
 ## Coverage
 
@@ -100,6 +97,10 @@ to add new and/or missing endpoints. Currently, the following services are suppo
 
 ## Usage
 
+```bash
+go mod edit -replace github.com/xanzy/go-gitlab=github.com/nanmu42/go-gitlab@latest
+```
+
 ```go
 import "github.com/xanzy/go-gitlab"
 ```
@@ -138,7 +139,7 @@ projects, _, err := git.Projects.ListProjects(opt)
 
 ### Examples
 
-The [examples](https://github.com/xanzy/go-gitlab/tree/master/examples) directory
+The [examples](https://github.com/nanmu42/go-gitlab/tree/master/examples) directory
 contains a couple for clear examples, of which one is partially listed here as well:
 
 ```go
@@ -183,15 +184,7 @@ func main() {
 }
 ```
 
-For complete usage of go-gitlab, see the full [package docs](https://godoc.org/github.com/xanzy/go-gitlab).
-
-## ToDo
-
-- The biggest thing this package still needs is tests :disappointed:
-
-## Issues
-
-- If you have an issue: report it on the [issue tracker](https://github.com/xanzy/go-gitlab/issues)
+For complete usage of go-gitlab, see the full [package docs](https://godoc.org/github.com/nanmu42/go-gitlab).
 
 ## Author
 
