@@ -187,6 +187,7 @@ type Client struct {
 	ProjectMembers          *ProjectMembersService
 	ProjectMirrors          *ProjectMirrorService
 	ProjectSnippets         *ProjectSnippetsService
+	ProjectTemplates        *ProjectTemplatesService
 	ProjectVariables        *ProjectVariablesService
 	ProjectVulnerabilities  *ProjectVulnerabilitiesService
 	Projects                *ProjectsService
@@ -413,6 +414,7 @@ func newClient(options ...ClientOptionFunc) (*Client, error) {
 	c.ProjectMembers = &ProjectMembersService{client: c}
 	c.ProjectMirrors = &ProjectMirrorService{client: c}
 	c.ProjectSnippets = &ProjectSnippetsService{client: c}
+	c.ProjectTemplates = &ProjectTemplatesService{client: c}
 	c.ProjectVariables = &ProjectVariablesService{client: c}
 	c.ProjectVulnerabilities = &ProjectVulnerabilitiesService{client: c}
 	c.Projects = &ProjectsService{client: c}
@@ -584,7 +586,7 @@ func (c *Client) NewRequest(method, path string, opt interface{}, options []Requ
 
 	var body interface{}
 	switch {
-	case method == http.MethodPost || method == http.MethodPut:
+	case method == http.MethodPatch || method == http.MethodPost || method == http.MethodPut:
 		reqHeaders.Set("Content-Type", "application/json")
 
 		if opt != nil {
