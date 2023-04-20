@@ -64,6 +64,48 @@ func TestBuildEventUnmarshal(t *testing.T) {
 	}
 }
 
+func TestCommitCommentEventUnmarshal(t *testing.T) {
+	jsonObject := loadFixture("testdata/webhooks/note_commit.json")
+
+	var event *CommitCommentEvent
+	err := json.Unmarshal(jsonObject, &event)
+	if err != nil {
+		t.Errorf("Commit Comment Event can not unmarshaled: %v\n ", err.Error())
+	}
+
+	if event == nil {
+		t.Errorf("Commit Comment Event is null")
+	}
+
+	if event.ObjectKind != string(NoteEventTargetType) {
+		t.Errorf("ObjectKind is %v, want %v", event.ObjectKind, NoteEventTargetType)
+	}
+
+	if event.EventType != "note" {
+		t.Errorf("EventType is %v, want %v", event.EventType, "note")
+	}
+
+	if event.ProjectID != 5 {
+		t.Errorf("ProjectID is %v, want %v", event.ProjectID, 5)
+	}
+
+	if event.User.ID != 42 {
+		t.Errorf("User ID is %d, want %d", event.User.ID, 42)
+	}
+
+	if event.Repository.Name != "Gitlab Test" {
+		t.Errorf("Repository name is %v, want %v", event.Repository.Name, "Gitlab Test")
+	}
+
+	if event.ObjectAttributes.NoteableType != "Commit" {
+		t.Errorf("NoteableType is %v, want %v", event.ObjectAttributes.NoteableType, "Commit")
+	}
+
+	if event.Commit.Title != "Add submodule" {
+		t.Errorf("Issue title is %v, want %v", event.Commit.Title, "Add submodule")
+	}
+}
+
 func TestJobEventUnmarshal(t *testing.T) {
 	jsonObject := loadFixture("testdata/webhooks/job.json")
 
@@ -78,25 +120,26 @@ func TestJobEventUnmarshal(t *testing.T) {
 	}
 
 	expectedEvent := JobEvent{
-		ObjectKind:         "build",
-		Ref:                "main",
-		Tag:                false,
-		BeforeSHA:          "0000000000000000000000000000000000000000",
-		SHA:                "95d49d1efbd941908580e79d65e4b5ecaf4a8305",
-		BuildID:            3580121225,
-		BuildName:          "auto_deploy:start",
-		BuildStage:         "coordinated:tag",
-		BuildStatus:        "success",
-		BuildCreatedAt:     "2023-01-10 13:50:02 UTC",
-		BuildStartedAt:     "2023-01-10 13:50:05 UTC",
-		BuildFinishedAt:    "2023-01-10 13:50:54 UTC",
-		BuildDuration:      49.503592,
-		BuildAllowFailure:  false,
-		BuildFailureReason: "unknown_failure",
-		RetriesCount:       1,
-		PipelineID:         743121198,
-		ProjectID:          31537070,
-		ProjectName:        "John Smith / release-tools-fake",
+		ObjectKind:          "build",
+		Ref:                 "main",
+		Tag:                 false,
+		BeforeSHA:           "0000000000000000000000000000000000000000",
+		SHA:                 "95d49d1efbd941908580e79d65e4b5ecaf4a8305",
+		BuildID:             3580121225,
+		BuildName:           "auto_deploy:start",
+		BuildStage:          "coordinated:tag",
+		BuildStatus:         "success",
+		BuildCreatedAt:      "2023-01-10 13:50:02 UTC",
+		BuildStartedAt:      "2023-01-10 13:50:05 UTC",
+		BuildFinishedAt:     "2023-01-10 13:50:54 UTC",
+		BuildDuration:       49.503592,
+		BuildQueuedDuration: 0.193009,
+		BuildAllowFailure:   false,
+		BuildFailureReason:  "unknown_failure",
+		RetriesCount:        1,
+		PipelineID:          743121198,
+		ProjectID:           31537070,
+		ProjectName:         "John Smith / release-tools-fake",
 		User: &EventUser{
 			ID:        2967854,
 			Name:      "John Smith",
@@ -134,9 +177,13 @@ func TestJobEventUnmarshal(t *testing.T) {
 	expectedEvent.Commit.FinishedAt = "2022-10-12 08:09:29 UTC"
 
 	expectedEvent.Runner.ID = 12270837
-	expectedEvent.Runner.Active = true
-	expectedEvent.Runner.Shared = true
 	expectedEvent.Runner.Description = "4-blue.shared.runners-manager.gitlab.com/default"
+	expectedEvent.Runner.RunnerType = "instance_type"
+	expectedEvent.Runner.Active = true
+	expectedEvent.Runner.IsShared = true
+	expectedEvent.Runner.Tags = []string{"linux", "docker"}
+
+	expectedEvent.Environment = "staging"
 
 	assert.Equal(t, expectedEvent, *event, "event should be equal to the expected one")
 }
@@ -173,6 +220,68 @@ func TestDeploymentEventUnmarshal(t *testing.T) {
 	if event.Ref != "1.0.0" {
 		t.Errorf("Ref is %s, want %s", event.Ref, "1.0.0")
 	}
+
+	if event.StatusChangedAt != "2021-04-28 21:50:00 +0200" {
+		t.Errorf("StatusChangedAt is %s, want %s", event.StatusChangedAt, "2021-04-28 21:50:00 +0200")
+	}
+
+	if event.DeploymentID != 15 {
+		t.Errorf("DeploymentID is %d, want %d", event.DeploymentID, 15)
+	}
+
+	if event.EnvironmentSlug != "staging" {
+		t.Errorf("EnvironmentSlug is %s, want %s", event.EnvironmentSlug, "staging")
+	}
+
+	if event.EnvironmentExternalURL != "https://staging.example.com" {
+		t.Errorf("EnvironmentExternalURL is %s, want %s", event.EnvironmentExternalURL, "https://staging.example.com")
+	}
+}
+
+func TestFeatureFlagEventUnmarshal(t *testing.T) {
+	jsonObject := loadFixture("testdata/webhooks/feature_flag.json")
+
+	var event *FeatureFlagEvent
+	err := json.Unmarshal(jsonObject, &event)
+	if err != nil {
+		t.Errorf("FeatureFlag Event can not unmarshaled: %v\n ", err.Error())
+	}
+
+	if event == nil {
+		t.Errorf("FeatureFlag Event is null")
+	}
+
+	if event.ObjectKind != "feature_flag" {
+		t.Errorf("ObjectKind is %s, want %s", event.ObjectKind, "feature_flag")
+	}
+
+	if event.Project.ID != 1 {
+		t.Errorf("Project.ID is %v, want %v", event.Project.ID, 1)
+	}
+
+	if event.User.ID != 1 {
+		t.Errorf("User ID is %d, want %d", event.User.ID, 1)
+	}
+
+	if event.User.Name != "Administrator" {
+		t.Errorf("Username is %s, want %s", event.User.Name, "Administrator")
+	}
+
+	if event.ObjectAttributes.ID != 6 {
+		t.Errorf("ObjectAttributes.ID is %d, want %d", event.ObjectAttributes.ID, 6)
+	}
+
+	if event.ObjectAttributes.Name != "test-feature-flag" {
+		t.Errorf("ObjectAttributes.Name is %s, want %s", event.ObjectAttributes.Name, "test-feature-flag")
+	}
+
+	if event.ObjectAttributes.Description != "test-feature-flag-description" {
+		t.Errorf("ObjectAttributes.Description is %s, want %s", event.ObjectAttributes.Description, "test-feature-flag-description")
+	}
+
+	if event.ObjectAttributes.Active != true {
+		t.Errorf("ObjectAttributes.Active is %t, want %t", event.ObjectAttributes.Active, true)
+	}
 }
 
 func TestIssueCommentEventUnmarshal(t *testing.T) {
@@ -186,6 +295,10 @@ func TestIssueCommentEventUnmarshal(t *testing.T) {
 
 	if event.ObjectKind != string(NoteEventTargetType) {
 		t.Errorf("ObjectKind is %v, want %v", event.ObjectKind, NoteEventTargetType)
+	}
+
+	if event.EventType != "note" {
+		t.Errorf("EventType is %v, want %v", event.EventType, "note")
 	}
 
 	if event.ProjectID != 5 {
@@ -202,6 +315,14 @@ func TestIssueCommentEventUnmarshal(t *testing.T) {
 
 	if event.Issue.Title != "test_issue" {
 		t.Errorf("Issue title is %v, want %v", event.Issue.Title, "test_issue")
+	}
+
+	if event.Issue.Position != 0 {
+		t.Errorf("Issue position is %v, want %v", event.Issue.Position, 0)
+	}
+
+	if event.Issue.BranchName != "" {
+		t.Errorf("Issue branch name is %v, want %v", event.Issue.BranchName, "")
 	}
 
 	if len(event.Issue.Labels) == 0 || event.Issue.Labels[0].ID != 25 {
@@ -245,16 +366,59 @@ func TestIssueEventUnmarshal(t *testing.T) {
 		t.Errorf("Issue Event can not unmarshaled: %v\n ", err.Error())
 	}
 
+	if event.ObjectKind != string(IssueEventTargetType) {
+		t.Errorf("ObjectKind is %v, want %v", event.ObjectKind, IssueEventTargetType)
+	}
+
+	if event.EventType != "issue" {
+		t.Errorf("EventType is %v, want %v", event.EventType, "issue")
+	}
+
 	if event.Project.ID != 1 {
 		t.Errorf("Project.ID is %v, want %v", event.Project.ID, 1)
 	}
 
-	if event.User.ID != 42 {
-		t.Errorf("User ID is %d, want %d", event.User.ID, 42)
+	if event.User.ID != 1 {
+		t.Errorf("User ID is %d, want %d", event.User.ID, 1)
 	}
 
 	if event.Assignee.Username != "user1" {
 		t.Errorf("Assignee username is %s, want %s", event.Assignee.Username, "user1")
+	}
+
+	if event.ObjectAttributes.ID != 301 {
+		t.Errorf("ObjectAttributes.ID is %v, want %v", event.ObjectAttributes.ID, 301)
+	}
+
+	if event.ObjectAttributes.Title != "New API: create/update/delete file" {
+		t.Errorf("ObjectAttributes.Title is %v, want %v", event.ObjectAttributes.Title, "New API: create/update/delete file")
+	}
+
+	if event.ObjectAttributes.StateID != StateIDOpen {
+		t.Errorf("ObjectAttributes.StateID is %v, want %v", event.ObjectAttributes.StateID, StateIDOpen)
+	}
+
+	if event.ObjectAttributes.State != "opened" {
+		t.Errorf("ObjectAttributes.State is %v, want %v", event.ObjectAttributes.State, "opened")
+	}
+	if event.ObjectAttributes.Confidential != false {
+		t.Errorf("ObjectAttributes.Confidential is %v, want %v", event.ObjectAttributes.Confidential, false)
+	}
+
+	if event.ObjectAttributes.TotalTimeSpent != 0 {
+		t.Errorf("ObjectAttributes.TotalTimeSpent is %v, want %v", event.ObjectAttributes.TotalTimeSpent, 0)
+	}
+
+	if event.ObjectAttributes.Action != "open" {
+		t.Errorf("ObjectAttributes.Action is %v, want %v", event.ObjectAttributes.Action, "open")
+	}
+
+	if event.ObjectAttributes.EscalationStatus != "triggered" {
+		t.Errorf("ObjectAttributes.EscalationStatus is %v, want %v", event.ObjectAttributes.EscalationStatus, "triggered")
+	}
+
+	if event.ObjectAttributes.EscalationPolicy.ID != 18 {
+		t.Errorf("ObjectAttributes.EscalationPolicy.ID is %v, want %v", event.ObjectAttributes.EscalationPolicy.ID, 18)
 	}
 
 	if event.Changes.TotalTimeSpent.Previous != 8100 {
@@ -313,11 +477,130 @@ func TestIssueEventUnmarshal(t *testing.T) {
 	assert.Equal(t, "2017-09-15 16:54:55 UTC", event.Changes.ClosedAt.Previous)
 	assert.Equal(t, "2017-09-15 16:56:00 UTC", event.Changes.ClosedAt.Current)
 
-	assert.Equal(t, StateIDOpen, event.Changes.StateID.Previous)
-	assert.Equal(t, StateIDClosed, event.Changes.StateID.Current)
+	assert.Equal(t, StateIDNone, event.Changes.StateID.Previous)
+	assert.Equal(t, StateIDOpen, event.Changes.StateID.Current)
 
 	assert.Equal(t, "2017-09-15 16:50:55 UTC", event.Changes.UpdatedAt.Previous)
 	assert.Equal(t, "2017-09-15 16:52:00 UTC", event.Changes.UpdatedAt.Current)
+}
+
+// Generate unit test for MergeCommentEvent
+func TestMergeCommentEventUnmarshal(t *testing.T) {
+	jsonObject := loadFixture("testdata/webhooks/note_merge_request.json")
+
+	var event *MergeCommentEvent
+	err := json.Unmarshal(jsonObject, &event)
+	if err != nil {
+		t.Errorf("Merge Comment Event can not unmarshaled: %v\n ", err.Error())
+	}
+
+	if event == nil {
+		t.Errorf("Merge Comment Event is null")
+	}
+
+	if event.ObjectAttributes.ID != 1244 {
+		t.Errorf("ObjectAttributes.ID is %v, want %v", event.ObjectAttributes.ID, 1244)
+	}
+
+	if event.ObjectAttributes.Note != "This MR needs work." {
+		t.Errorf("ObjectAttributes.Note is %v, want %v", event.ObjectAttributes.Note, "This MR needs work.")
+	}
+
+	if event.ObjectAttributes.NoteableType != "MergeRequest" {
+		t.Errorf("ObjectAttributes.NoteableType is %v, want %v", event.ObjectAttributes.NoteableType, "MergeRequest")
+	}
+
+	if event.ObjectAttributes.AuthorID != 1 {
+		t.Errorf("ObjectAttributes.AuthorID is %v, want %v", event.ObjectAttributes.AuthorID, 1)
+	}
+
+	if event.ObjectAttributes.CreatedAt != "2015-05-17 18:21:36 UTC" {
+		t.Errorf("ObjectAttributes.CreatedAt is %v, want %v", event.ObjectAttributes.CreatedAt, "2015-05-17 18:21:36 UTC")
+	}
+
+	if event.ObjectAttributes.UpdatedAt != "2015-05-17 18:21:36 UTC" {
+		t.Errorf("ObjectAttributes.UpdatedAt is %v, want %v", event.ObjectAttributes.UpdatedAt, "2015-05-17 18:21:36 UTC")
+	}
+
+	if event.ObjectAttributes.ProjectID != 5 {
+		t.Errorf("ObjectAttributes.ProjectID is %v, want %v", event.ObjectAttributes.ProjectID, 5)
+	}
+
+	if event.MergeRequest.ID != 7 {
+		t.Errorf("MergeRequest.ID is %v, want %v", event.MergeRequest.ID, 7)
+	}
+
+	if event.MergeRequest.TargetBranch != "markdown" {
+		t.Errorf("MergeRequest.TargetBranch is %v, want %v", event.MergeRequest.TargetBranch, "markdown")
+	}
+
+	// generate test code for rest of the event.MergeRequest fields
+	if event.MergeRequest.SourceBranch != "master" {
+		t.Errorf("MergeRequest.SourceBranch is %v, want %v", event.MergeRequest.SourceBranch, "ms-viewport")
+	}
+
+	if event.MergeRequest.SourceProjectID != 5 {
+		t.Errorf("MergeRequest.SourceProjectID is %v, want %v", event.MergeRequest.SourceProjectID, 5)
+	}
+
+	if event.MergeRequest.AuthorID != 8 {
+		t.Errorf("MergeRequest.AuthorID is %v, want %v", event.MergeRequest.AuthorID, 8)
+	}
+
+	if event.MergeRequest.AssigneeID != 28 {
+		t.Errorf("MergeRequest.AssigneeID is %v, want %v", event.MergeRequest.AssigneeID, 28)
+	}
+
+	if event.MergeRequest.State != "opened" {
+		t.Errorf("MergeRequest.state is %v, want %v", event.MergeRequest.State, "opened")
+	}
+
+	if event.MergeRequest.MergeStatus != "cannot_be_merged" {
+		t.Errorf("MergeRequest.merge_status is %v, want %v", event.MergeRequest.MergeStatus, "cannot_be_merged")
+	}
+
+	if event.MergeRequest.TargetProjectID != 5 {
+		t.Errorf("MergeRequest.target_project_id is %v, want %v", event.MergeRequest.TargetProjectID, 5)
+	}
+
+	assert.Equal(t, []*EventLabel{
+		{
+			ID:          206,
+			Title:       "Afterpod",
+			Color:       "#3e8068",
+			ProjectID:   0,
+			CreatedAt:   "2019-06-05T14:32:20.211Z",
+			UpdatedAt:   "2019-06-05T14:32:20.211Z",
+			Template:    false,
+			Description: "",
+			Type:        "GroupLabel",
+			GroupID:     4,
+		},
+		{
+			ID:          86,
+			Title:       "Element",
+			Color:       "#231afe",
+			ProjectID:   4,
+			CreatedAt:   "2019-06-05T14:32:20.637Z",
+			UpdatedAt:   "2019-06-05T14:32:20.637Z",
+			Template:    false,
+			Description: "",
+			Type:        "ProjectLabel",
+			GroupID:     0,
+		},
+	}, event.MergeRequest.Labels)
+
+	assert.Equal(t, &EventUser{
+		ID:        0,
+		Name:      "User1",
+		Username:  "user1",
+		AvatarURL: "http://www.gravatar.com/avatar/e64c7d89f26bd1972efa854d13d7dd61?s=40\u0026d=identicon",
+		Email:     "",
+	}, event.MergeRequest.Assignee)
+
+	if event.MergeRequest.DetailedMergeStatus != "checking" {
+		t.Errorf("MergeRequest.DetailedMergeStatus is %v, want %v", event.MergeRequest.DetailedMergeStatus, "checking")
+	}
 }
 
 func TestMergeEventUnmarshal(t *testing.T) {
@@ -333,6 +616,14 @@ func TestMergeEventUnmarshal(t *testing.T) {
 		t.Errorf("Merge Event is null")
 	}
 
+	if event.EventType != "merge_request" {
+		t.Errorf("EventType is %v, want %v", event.EventType, "merge_request")
+	}
+
+	if event.Project.CIConfigPath != "" {
+		t.Errorf("Project.CIConfigPath is %v, want %v", event.Project.CIConfigPath, "")
+	}
+
 	if event.ObjectAttributes.ID != 99 {
 		t.Errorf("ObjectAttributes.ID is %v, want %v", event.ObjectAttributes.ID, 99)
 	}
@@ -344,6 +635,27 @@ func TestMergeEventUnmarshal(t *testing.T) {
 	if event.ObjectAttributes.LastCommit.ID != "da1560886d4f094c3e6c9ef40349f7d38b5d27d7" {
 		t.Errorf("ObjectAttributes.LastCommit.ID is %v, want %s", event.ObjectAttributes.LastCommit.ID, "da1560886d4f094c3e6c9ef40349f7d38b5d27d7")
 	}
+
+	if event.ObjectAttributes.TotalTimeSpent != 0 {
+		t.Errorf("ObjectAttributes.TotalTimeSpent is %v, want %v", event.ObjectAttributes.TotalTimeSpent, 0)
+	}
+
+	if event.ObjectAttributes.TimeChange != 0 {
+		t.Errorf("ObjectAttributes.TimeChange is %v, want %v", event.ObjectAttributes.TimeChange, 0)
+	}
+
+	if event.ObjectAttributes.HumanTotalTimeSpent != "30m" {
+		t.Errorf("ObjectAttributes.HumanTotalTimeSpent is %v, want %v", event.ObjectAttributes.HumanTotalTimeSpent, "30m")
+	}
+
+	if event.ObjectAttributes.HumanTimeChange != "30m" {
+		t.Errorf("ObjectAttributes.HumanTimeChange is %v, want %v", event.ObjectAttributes.HumanTimeChange, "30m")
+	}
+
+	if event.ObjectAttributes.HumanTimeEstimate != "1h" {
+		t.Errorf("ObjectAttributes.HumanTimeEstimate is %v, want %v", event.ObjectAttributes.HumanTimeEstimate, "1h")
+	}
+
 	if event.Assignees[0].Name != expectedName {
 		t.Errorf("Assignee.Name is %v, want %v", event.Assignees[0].Name, expectedName)
 	}
@@ -374,6 +686,10 @@ func TestMergeEventUnmarshal(t *testing.T) {
 
 	if event.ObjectAttributes.BlockingDiscussionsResolved != true {
 		t.Errorf("BlockingDiscussionsResolved isn't true")
+	}
+
+	if event.ObjectAttributes.FirstContribution != true {
+		t.Errorf("FirstContribution isn't true")
 	}
 
 	if event.Assignees[0].ID != expectedID {
@@ -408,6 +724,10 @@ func TestMergeEventUnmarshal(t *testing.T) {
 		t.Errorf("Reviewers[0].AvatarURL is %v, want %v", event.Reviewers[0].AvatarURL, excpectedAvatar)
 	}
 
+	if event.ObjectAttributes.DetailedMergeStatus != "mergeable" {
+		t.Errorf("DetailedMergeStatus is %s, want %s", event.ObjectAttributes.DetailedMergeStatus, "mergeable")
+	}
+
 	assert.Equal(t, []*EventLabel{
 		{
 			ID:          206,
@@ -422,6 +742,21 @@ func TestMergeEventUnmarshal(t *testing.T) {
 			GroupID:     41,
 		},
 	}, event.Labels)
+
+	assert.Equal(t, []*EventLabel{
+		{
+			ID:          206,
+			Title:       "API",
+			Color:       "#ffffff",
+			ProjectID:   14,
+			CreatedAt:   "2013-12-03T17:15:43Z",
+			UpdatedAt:   "2013-12-03T17:15:43Z",
+			Template:    false,
+			Description: "API related issues",
+			Type:        "ProjectLabel",
+			GroupID:     41,
+		},
+	}, event.ObjectAttributes.Labels)
 
 	assert.Equal(t, []*EventLabel{
 		{
@@ -570,10 +905,6 @@ func TestMergeEventUnmarshalFromGroup(t *testing.T) {
 		t.Errorf("Repository.Name is %v, want %v", event.Repository.Name, exampleProjectName)
 	}
 
-	if event.Assignee.Username != expectedUsername {
-		t.Errorf("Assignee.Username is %v, want %v", event.Assignee, expectedUsername)
-	}
-
 	if event.User.Name != expectedName {
 		t.Errorf("Username is %s, want %s", event.User.Name, expectedName)
 	}
@@ -659,6 +990,22 @@ func TestPipelineEventUnmarshal(t *testing.T) {
 	if event.Builds[1].FailureReason != "" {
 		t.Errorf("Builds[0].Failurereason is %v, want %v", event.Builds[0].FailureReason, "''")
 	}
+
+	if event.SourcePipline.PipelineID != 30 {
+		t.Errorf("Source Pipline ID is %v, want %v", event.SourcePipline.PipelineID, 30)
+	}
+
+	if event.SourcePipline.JobID != 3401 {
+		t.Errorf("Source Pipline JobID is %v, want %v", event.SourcePipline.JobID, 3401)
+	}
+
+	if event.SourcePipline.Project.ID != 41 {
+		t.Errorf("Source Pipline Project ID is %v, want %v", event.SourcePipline.Project.ID, 41)
+	}
+
+	if event.MergeRequest.DetailedMergeStatus != "mergeable" {
+		t.Errorf("MergeRequest.DetailedMergeStatus is %v, want %v", event.MergeRequest.DetailedMergeStatus, "mergeable")
+	}
 }
 
 func TestPushEventUnmarshal(t *testing.T) {
@@ -673,12 +1020,20 @@ func TestPushEventUnmarshal(t *testing.T) {
 		t.Errorf("Push Event is null")
 	}
 
+	if event.EventName != "push" {
+		t.Errorf("EventName is %v, want %v", event.EventName, "push")
+	}
+
 	if event.ProjectID != 15 {
 		t.Errorf("ProjectID is %v, want %v", event.ProjectID, 15)
 	}
 
 	if event.UserName != exampleEventUserName {
 		t.Errorf("Username is %s, want %s", event.UserName, exampleEventUserName)
+	}
+
+	if event.Project.ID != 15 {
+		t.Errorf("Project.ID is %v, want %v", event.Project.ID, 15)
 	}
 
 	if event.Commits[0] == nil || event.Commits[0].Timestamp == nil {
@@ -782,8 +1137,16 @@ func TestTagEventUnmarshal(t *testing.T) {
 		t.Errorf("Tag Event is null")
 	}
 
+	if event.EventName != "tag_push" {
+		t.Errorf("EventName is %v, want %v", event.EventName, "tag_push")
+	}
+
 	if event.ProjectID != 1 {
 		t.Errorf("ProjectID is %v, want %v", event.ProjectID, 1)
+	}
+
+	if event.Project.ID != 1 {
+		t.Errorf("Project.ID is %v, want %v", event.Project.ID, 1)
 	}
 
 	if event.UserName != exampleEventUserName {
