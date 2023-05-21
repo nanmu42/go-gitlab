@@ -59,6 +59,8 @@ func TestGetUser(t *testing.T) {
 		Organization: "Smith Inc",
 		JobTitle:     "Operations Specialist",
 		AvatarURL:    "http://localhost:3000/uploads/user/avatar/1/cd8.jpeg",
+		Followers:    1,
+		Following:    1,
 	}
 	require.Equal(t, want, user)
 }
