@@ -103,6 +103,8 @@ type User struct {
 	UsingLicenseSeat               bool               `json:"using_license_seat"`
 	CustomAttributes               []*CustomAttribute `json:"custom_attributes"`
 	NamespaceID                    int                `json:"namespace_id"`
+	Followers                      int                `json:"followers"`
+	Following                      int                `json:"following"`
 }
 
 // UserIdentity represents a user identity.
