@@ -41,6 +41,7 @@ type Job struct {
 	CreatedAt         *time.Time `json:"created_at"`
 	StartedAt         *time.Time `json:"started_at"`
 	FinishedAt        *time.Time `json:"finished_at"`
+	ErasedAt          *time.Time `json:"erased_at"`
 	Duration          float64    `json:"duration"`
 	QueuedDuration    float64    `json:"queued_duration"`
 	ArtifactsExpireAt *time.Time `json:"artifacts_expire_at"`
@@ -91,13 +92,16 @@ type Bridge struct {
 	CreatedAt          *time.Time    `json:"created_at"`
 	StartedAt          *time.Time    `json:"started_at"`
 	FinishedAt         *time.Time    `json:"finished_at"`
+	ErasedAt           *time.Time    `json:"erased_at"`
 	Duration           float64       `json:"duration"`
+	QueuedDuration     float64       `json:"queued_duration"`
 	ID                 int           `json:"id"`
 	Name               string        `json:"name"`
 	Pipeline           PipelineInfo  `json:"pipeline"`
 	Ref                string        `json:"ref"`
 	Stage              string        `json:"stage"`
 	Status             string        `json:"status"`
+	FailureReason      string        `json:"failure_reason"`
 	Tag                bool          `json:"tag"`
 	WebURL             string        `json:"web_url"`
 	User               *User         `json:"user"`
